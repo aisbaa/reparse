@@ -1,6 +1,6 @@
 """ Contains all the parser types and the parser generator.
 """
-
+from reparse.expression import SimpleExpression
 
 def basic_parser(patterns, with_name=None):
     """ Basic ordered parser.
@@ -88,3 +88,54 @@ def parser(parser_type=basic_parser, functions=None, patterns=None, expressions=
     validate(patterns, expressions)
 
     return parser_type(build_all(patterns, expressions, functions))
+
+
+class Parser(object):
+    """Parser allows to apply multiple regular expresions on same data.
+
+    Each result is added to output dictionary.
+
+    Args:
+        expresions: multiple instances of Expression.
+
+    Example:
+
+        >>> from datetime import datetime
+        >>> parser_obj = Parser(
+        ...     SimpleExpression('price', '\$(\d+)', lambda x: int(x)),
+        ...     SimpleExpression('service', '(aws-[\w-]+)', lambda x: x),
+        ...     SimpleExpression(
+        ...         'date', '(\d{4}-\d{2}-\d{2})',
+        ...         lambda x: datetime.strptime(x, '%Y-%m-%d').date()
+        ...     ),
+        ... )
+        >>> result = parser_obj.line('aws-s3-bucket 6GB $10 2015-01-14')
+        >>> result['service']
+        'aws-s3-bucket'
+        >>> result['price']
+        10
+        >>> result['date']
+        datetime.date(2015, 1, 14)
+    """
+
+    def __init__(self, *expressions):
+        self.expresions = expressions
+
+    def line(self, line):
+        """Returns a dictionary of results processed by all expressions.
+
+        Args:
+            line (str): string
+
+        Returns:
+            dict: {expression.name: result}
+        """
+        output = {}
+        for expresion in self.expresions:
+            res = expresion.findall(line)
+            if not res:
+                continue
+            output[expresion.name] = list(res)
+            if len(output[expresion.name]) == 1:
+                output[expresion.name] = output[expresion.name][0]
+        return output

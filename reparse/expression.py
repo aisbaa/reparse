@@ -3,7 +3,46 @@ import regex
 from reparse.config import expression_compiler
 
 
-class Expression(object):
+
+class InvalidPattern(Exception):
+    def __init__(self, pattern, regex_error):
+        super(InvalidPattern, self).__init__()
+        self.pattern = pattern
+        self.regex_error = regex_error
+
+    def __str__(self):
+        return '%{0.regex_error} in "{0.pattern}" pattern'.format(self)
+
+
+class SimpleExpression(object):
+
+    def __init__(self, name, regex, func):
+        super(SimpleExpression, self).__init__()
+        self.name = name
+        self.regex = regex
+        self.func = func
+        self._compiled = None
+
+    @property
+    def pattern(self):
+        if not self._compiled:
+            try:
+                self._compiled = expression_compiler(self.regex)
+            except regex.error as e:
+                raise InvalidPattern(self.regex, e)
+        return self._compiled
+
+    def findall(self, string):
+        matches = self.pattern.findall(string)
+        for match in matches:
+            if isinstance(match, str):
+                yield self.func(match)
+            else:
+                yield self.func(*match)
+        return None
+
+
+class Expression(SimpleExpression):
     """ Expressions are the building blocks of parsers.
 
     Each contains:
@@ -17,31 +56,13 @@ class Expression(object):
     results from the parsing functions.
     """
 
-    class InvalidPattern(Exception):
-        def __init__(self, pattern, regex_error):
-            super(Expression.InvalidPattern, self).__init__()
-            self.pattern = pattern
-            self.regex_error = regex_error
-
-        def __str__(self):
-            return '%{0.regex_error} in "{0.pattern}" pattern'.format(self)
-
     def __init__(self, regex, functions, group_lengths, final_function, name=""):
         self.regex = regex
         self.group_functions = functions
         self.group_lengths = group_lengths
         self.final_function = final_function
         self.name = name
-        self.compiled = False
-
-    @property
-    def pattern(self):
-        if not self.compiled:
-            try:
-                self.compiled = expression_compiler(self.regex)
-            except regex.error as e:
-                raise self.InvalidPattern(self.regex, e)
-        return self.compiled
+        self._compiled = None
 
     def findall(self, string):
         """ Parse string, returning all outputs as parsed by functions
