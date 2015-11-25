@@ -3,19 +3,15 @@ import os
 from setuptools import setup
 
 
-def readme_or_docstring():
+def readme():
     path = os.path.join(os.path.dirname(__file__), 'readme.rst')
-    if os.path.isfile(path):
-        return open(path).read()
-    else:
-        import reparse
+    return open(path).read()
 
-        return reparse.__doc__
 
 setup(name='reparse',
       version='2.1',
       description='Sane Regular Expression based parsers',
-      long_description=readme_or_docstring(),
+      long_description=readme(),
       author='Andy Chase',
       author_email='theandychase@gmail.com',
       url='http://github.com/andychase/reparse',
