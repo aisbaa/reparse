@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def readme():
@@ -17,7 +17,7 @@ setup(name='reparse',
       url='http://github.com/andychase/reparse',
       download_url='https://github.com/andychase/reparse/archive/master.zip',
       license='MIT',
-      packages=['reparse'],
+      packages=find_packages(exclude=["tests", ".tox"]),
       install_requires=[
           'regex',
           'pyyaml',
@@ -33,4 +33,4 @@ setup(name='reparse',
           'Topic :: Software Development :: Libraries :: Python Modules',
           'Topic :: Text Processing'
       ),
-      )
+)
