@@ -39,7 +39,6 @@ class SimpleExpression(object):
                 yield self.func(match)
             else:
                 yield self.func(*match)
-        return None
 
 
 class Expression(SimpleExpression):
