@@ -102,10 +102,10 @@ class Parser(object):
 
         >>> from datetime import datetime
         >>> parser_obj = Parser(
-        ...     SimpleExpression('price', '\$(\d+)', lambda x: int(x)),
-        ...     SimpleExpression('service', '(aws-[\w-]+)', lambda x: x),
+        ...     SimpleExpression('price', r'\$(\d+)', lambda x: int(x)),
+        ...     SimpleExpression('service', r'(aws-[\w-]+)', lambda x: x),
         ...     SimpleExpression(
-        ...         'date', '(\d{4}-\d{2}-\d{2})',
+        ...         'date', r'(\d{4}-\d{2}-\d{2})',
         ...         lambda x: datetime.strptime(x, '%Y-%m-%d').date()
         ...     ),
         ... )
