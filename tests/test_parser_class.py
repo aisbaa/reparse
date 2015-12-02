@@ -18,7 +18,7 @@ class TestParserClass(TestCase):
     def test_minimal_constructor(self):
         """Parser API has to be simple enough to construct it on a fly."""
         parser = Parser(
-            SimpleExpression('hour', '([12]?\d)(am|pm)', time_12_to_24)
+            SimpleExpression('hour', r'([12]?\d)(am|pm)', time_12_to_24)
         )
         assert parser.line('1pm') == {'hour': 13}
         assert parser.line('10am') == {'hour': 10}

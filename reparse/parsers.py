@@ -133,6 +133,7 @@ class Parser(object):
         output = {}
         for expresion in self.expresions:
             res = expresion.findall(line)
+            # TODO(Aistis): handle result in separate method
             if not res:
                 continue
             output[expresion.name] = list(res)
