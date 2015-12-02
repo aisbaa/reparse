@@ -1,3 +1,4 @@
+import io
 from unittest import TestCase
 
 from reparse import Parser, SimpleExpression
@@ -28,3 +29,23 @@ class TestParserClass(TestCase):
             SimpleExpression('hour', '([12]?\d)(am|pm)', time_12_to_24)
         )
         assert parser.line('1pm-4am') == {'hour': [13, 4]}
+
+    def test_must_support_file_parsing(self):
+        raw_data = (
+            u"8am - brekfast\n"
+            u"9am - work\n"
+            u"12am - lunch break\n"
+        )
+        parser = Parser(
+            SimpleExpression('hour', r'([12]?\d)(am|pm)', time_12_to_24)
+        )
+        data = parser.parse_file(io.StringIO(raw_data))
+        assert set(data['hour']) == {8, 9, 12}
+
+    def test_parser_is_able_to_merge_expresion_result(self):
+        """Parser must be able to merge expresion results into one dict."""
+        final_output = {}
+        part_output = {'a': 3}
+        parser = Parser()
+        parser.merge_output(final_output, part_output)
+        assert final_output == part_output

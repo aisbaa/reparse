@@ -139,3 +139,34 @@ class Parser(object):
             if len(output[expresion.name]) == 1:
                 output[expresion.name] = output[expresion.name][0]
         return output
+
+    def parse_file(self, f):
+        """Calls self.line for each line in file. Composes dict of data
+        returned by expressions for each line in a file.
+
+        """
+        final_output = {}
+        for line in f:
+            output = self.line(line)
+            self.merge_output(final_output, output)
+        return final_output
+
+    def merge_output(self, result, part):
+        """Merges two dictionaries in a wayt that no data is lost.
+
+        >>> parser = Parser()
+        >>> parser.merge_output({'a': 3}, {'a': 4})
+        {'a': [3, 4]}
+        """
+        for k, v in part.items():
+            if k not in result:
+                # no key in result dict
+                result[k] = v
+                continue
+            # key is in result dictionary
+            result_value = result[k]
+            if isinstance(result_value, list):
+                result_value.append(v)
+            else:
+                result[k] = [result_value, v]
+        return result
