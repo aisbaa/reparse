@@ -1,4 +1,6 @@
 import io
+
+from six import u
 from unittest import TestCase
 
 from reparse import Parser, SimpleExpression
@@ -31,11 +33,7 @@ class TestParserClass(TestCase):
         assert parser.line('1pm-4am') == {'hour': [13, 4]}
 
     def test_must_support_file_parsing(self):
-        raw_data = (
-            u"8am - brekfast\n"
-            u"9am - work\n"
-            u"12am - lunch break\n"
-        )
+        raw_data = u('8am - brekfast\n9am - work\n12am - lunch break\n')
         parser = Parser(
             SimpleExpression('hour', r'([12]?\d)(am|pm)', time_12_to_24)
         )
