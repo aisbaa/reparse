@@ -1,7 +1,4 @@
-import regex as re
-
-from reparse.config import expression_compiler
-
+import re
 
 
 class InvalidPattern(Exception):
@@ -27,7 +24,7 @@ class SimpleExpression(object):
     def pattern(self):
         if not self._compiled:
             try:
-                self._compiled = expression_compiler(self.regex)
+                self._compiled = re.compile(self.regex)
             except re.error as e:
                 raise InvalidPattern(self.regex, e)
         return self._compiled
