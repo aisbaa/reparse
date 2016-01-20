@@ -119,7 +119,7 @@ class Parser(object):
     """
 
     def __init__(self, *expressions):
-        self.expresions = expressions
+        self.expressions = expressions
 
     def line(self, line):
         """Returns a dictionary of results processed by all expressions.
@@ -131,14 +131,15 @@ class Parser(object):
             dict: {expression.name: result}
         """
         output = {}
-        for expresion in self.expresions:
-            res = expresion.findall(line)
-            # TODO(Aistis): handle result in separate method
-            if not res:
-                continue
-            output[expresion.name] = list(res)
-            if len(output[expresion.name]) == 1:
-                output[expresion.name] = output[expresion.name][0]
+        for expression in self.expressions:
+            # one expresion can yield multiple matches, or None
+            for res in expression.findall(line):
+                output = self.merge_output(
+                    output,
+                    {
+                        expression.name: res
+                    }
+                )
         return output
 
     def parse_file(self, f):
@@ -158,7 +159,14 @@ class Parser(object):
         >>> parser = Parser()
         >>> parser.merge_output({'a': 3}, {'a': 4})
         {'a': [3, 4]}
+        >>> parser.merge_output({}, None)
+        {}
+        >>> parser.merge_output({}, [])
+        {}
         """
+        if not part:
+            return result
+
         for k, v in part.items():
             if k not in result:
                 # no key in result dict
