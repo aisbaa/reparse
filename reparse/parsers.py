@@ -154,7 +154,7 @@ class Parser(object):
         return final_output
 
     def merge_output(self, result, part):
-        """Merges two dictionaries in a wayt that no data is lost.
+        """Merges two dictionaries in a way that no data is lost.
 
         >>> parser = Parser()
         >>> parser.merge_output({'a': 3}, {'a': 4})
