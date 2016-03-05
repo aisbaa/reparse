@@ -28,7 +28,7 @@ class TestParserClass(TestCase):
 
     def test_multiple_values_should_be_concatinated_a_list(self):
         parser = Parser(
-            SimpleExpression('hour', '([12]?\d)(am|pm)', time_12_to_24)
+            SimpleExpression('hour', r'([12]?\d)(am|pm)', time_12_to_24)
         )
         assert parser.line('1pm-4am') == {'hour': [13, 4]}
 
