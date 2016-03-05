@@ -17,4 +17,4 @@ notifications:
   email: false
 
 after_success:
-  - coveralls
+  - coveralls --base_dir $(TRAVIS_BUILD_DIR)
