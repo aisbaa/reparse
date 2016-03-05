@@ -47,3 +47,8 @@ class TestParserClass(TestCase):
         parser = Parser()
         parser.merge_output(final_output, part_output)
         assert final_output == part_output
+
+    def test_if_parser_is_callable(self):
+        parser = Parser(SimpleExpression('numbers', r'\d+', int))
+        result = parser('1 2 3')
+        assert result['numbers'] == [1, 2, 3]

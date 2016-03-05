@@ -179,3 +179,9 @@ class Parser(object):
             else:
                 result[k] = [result_value, v]
         return result
+
+    def __call__(self, source):
+        if isinstance(source, str):
+            return self.line(source)
+        else:
+            return self.parse_file(source)
