@@ -18,7 +18,3 @@ notifications:
 
 after_success:
   - coveralls
-
-deploy:
-  # allows to send coverage reports to coveralls.io
-  skip_cleanup: true
