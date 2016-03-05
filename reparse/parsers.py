@@ -91,9 +91,10 @@ def parser(parser_type=basic_parser, functions=None, patterns=None, expressions=
 
 
 class Parser(object):
-    """Parser allows to apply multiple regular expresions on same data.
+    """Turns textual data into python dict
 
-    Each result is added to output dictionary.
+    Each line in a file gets parsed by expression, result is added to output
+    dictionary. Expression name is used as a key in result dictionary
 
     Args:
         expresions: multiple instances of Expression.
@@ -101,7 +102,7 @@ class Parser(object):
     Example:
 
         >>> from datetime import datetime
-        >>> parser_obj = Parser(
+        >>> parser = Parser(
         ...     SimpleExpression('price', r'\$(\d+)', lambda x: int(x)),
         ...     SimpleExpression('service', r'(aws-[\w-]+)', lambda x: x),
         ...     SimpleExpression(
@@ -109,13 +110,14 @@ class Parser(object):
         ...         lambda x: datetime.strptime(x, '%Y-%m-%d').date()
         ...     ),
         ... )
-        >>> result = parser_obj.line('aws-s3-bucket 6GB $10 2015-01-14')
+        >>> result = parser('aws-s3-bucket 6GB $10 2015-01-14')
         >>> result['service']
         'aws-s3-bucket'
         >>> result['price']
         10
         >>> result['date']
         datetime.date(2015, 1, 14)
+
     """
 
     def __init__(self, *expressions):
