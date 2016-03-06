@@ -3,7 +3,9 @@ RE|PARSE
 
 *Python library/tools for combining and parsing using Regular Expressions in a maintainable way*
 
-[|Build Status| `Download/View Source on Github`_] |coverage status| [`Docs at ReadtheDocs`_]
+|Build Status| |coverage status| |landscape status|
+
+`Docs at ReadtheDocs`_
 
 
 This library also allows you to:
@@ -173,6 +175,10 @@ MIT Licensed! See LICENSE file for the full text.
 
 .. |coverage status| image:: https://coveralls.io/repos/github/aisbaa/reparse/badge.svg?branch=master
    :target: https://coveralls.io/github/aisbaa/reparse?branch=master
+
+.. |landscape status| image:: https://landscape.io/github/aisbaa/reparse/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/aisbaa/reparse/master
+   :alt: Code Health
 
 .. _Download/View Source on Github: https://github.com/andychase/reparse
 
