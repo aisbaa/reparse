@@ -9,7 +9,7 @@ python:
   - 3.5
 
 install:
-  - pip install tox-travis python-coveralls
+  - pip install tox-travis coveralls
 
 script: tox
 
@@ -17,4 +17,4 @@ notifications:
   email: false
 
 after_success:
-  - coveralls --base_dir $(TRAVIS_BUILD_DIR)
+  - coveralls
