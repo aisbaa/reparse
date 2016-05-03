@@ -2,6 +2,7 @@
 import os
 from setuptools import setup, find_packages
 
+import versioneer
 
 def readme():
     path = os.path.join(os.path.dirname(__file__), 'readme.rst')
@@ -9,7 +10,10 @@ def readme():
 
 
 setup(name='reparse',
-      version='2.1',
+
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
+
       description='Sane Regular Expression based parsers',
       long_description=readme(),
       author='Andy Chase',
