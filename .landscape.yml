@@ -4,3 +4,6 @@ pep8:
 doc-warnings: false
 test-warnings: true
 max-line-length: 80
+ignore-patterns:
+  /deparse/_version.py
+  /versioneer.py
