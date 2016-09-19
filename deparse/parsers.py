@@ -9,8 +9,9 @@ class D(Expression):
     Args:
         regex(str): regular expression passed to expression object
         func(callable): optional parameter used by parser to do post matching
-            processing. 
+            processing.
     """
+
     def __init__(self, regex, func=None):
         super(D, self).__init__(regex)
         self.func = func
