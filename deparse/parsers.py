@@ -1,3 +1,5 @@
+import six
+
 from deparse.expression import Expression
 
 
@@ -39,7 +41,8 @@ class ParserMeta(type):
         )
 
 
-class Parser(metaclass=ParserMeta):
+@six.add_metaclass(ParserMeta)
+class Parser(object):
     """Turns textual data into python dict/object
 
     Each line in a file gets parsed by expression, result is added to output

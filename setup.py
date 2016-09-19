@@ -14,7 +14,9 @@ setup(name='deparse',
       version=versioneer.get_version(),
       cmdclass=versioneer.get_cmdclass(),
       packages=find_packages(exclude=["tests", ".tox"]),
-
+      install_requires=[
+          'six',
+      ],
       description=(
           'Declarative approach to parsing text documents using regular'
           ' expressions.'
