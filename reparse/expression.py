@@ -2,6 +2,12 @@ import re
 
 
 class InvalidPattern(Exception):
+    """Helps to debug lazy regex
+
+    Since Expression is evaluated on first use it might be hard to know which
+    regex is faulty.
+    """
+
     def __init__(self, pattern, regex_error):
         super(InvalidPattern, self).__init__()
         self.pattern = pattern
@@ -11,17 +17,29 @@ class InvalidPattern(Exception):
         return '%{0.regex_error} in "{0.pattern}" pattern'.format(self)
 
 
-class SimpleExpression(object):
+class Expression(object):
+    """Slightly enhanced regex"""
 
-    def __init__(self, name, regex, func):
-        super(SimpleExpression, self).__init__()
-        self.name = name
+    def __init__(self, regex, func=None):
+        """
+        Args:
+            regex (str): regular expression used in findall method.
+            func (function): optional function applied on matched string before
+                yielding. Useful to convert string to desired type or perform
+                additional processing.
+        """
+        super(Expression, self).__init__()
+
+        if not func:
+            func = lambda x: x
+
         self.regex = regex
         self.func = func
         self._compiled = None
 
     @property
     def pattern(self):
+        """Compiled regex object"""
         if not self._compiled:
             try:
                 self._compiled = re.compile(self.regex)
@@ -30,126 +48,14 @@ class SimpleExpression(object):
         return self._compiled
 
     def findall(self, string):
+        """Parses given string and yields result
+
+        Applies self.function before yielding result.
+        """
+
         matches = self.pattern.findall(string)
         for match in matches:
             if isinstance(match, str):
                 yield self.func(match)
             else:
                 yield self.func(*match)
-
-
-class Expression(SimpleExpression):
-    """ Expressions are the building blocks of parsers.
-
-    Each contains:
-
-    - A regex pattern (lazily compiled on first usage)
-    - Group lengths, functions and names
-    - a ``final_function``
-
-    When an expression runs with ``findall`` or ``scan``,
-    it matches a string using its regex, and returns the
-    results from the parsing functions.
-    """
-
-    def __init__(self, regex, functions, group_lengths, final_function, name=""):
-        self.regex = regex
-        self.group_functions = functions
-        self.group_lengths = group_lengths
-        self.final_function = final_function
-        self.name = name
-        self._compiled = None
-
-    def findall(self, string):
-        """ Parse string, returning all outputs as parsed by functions
-        """
-        output = []
-        for match in self.pattern.findall(string):
-            if isinstance(match, str):
-                match = [match]
-            self._list_add(output, self.run(match))
-        return output
-
-    def scan(self, string):
-        """ Like findall, but also returning matching start and end string locations
-        """
-        return list(self._scanner_to_matches(self.pattern.scanner(string), self.run))
-
-    def run(self, matches):
-        """ Run group functions over matches
-        """
-        def _run(matches):
-            group_starting_pos = 0
-            for current_pos, (group_length, group_function) in enumerate(zip(self.group_lengths, self.group_functions)):
-                start_pos = current_pos + group_starting_pos
-                end_pos = current_pos + group_starting_pos + group_length
-                yield group_function(matches[start_pos:end_pos])
-                group_starting_pos += group_length - 1
-        return self.final_function(list(_run(matches)))
-
-    def build_full_tree(self):
-        return '{}|{}({})'.format(sum(self.group_lengths), self.final_function.__name__, ", ".join(self.build_tree()))
-
-    def build_tree(self):
-        for length, function in zip(self.group_lengths, self.group_functions):
-            if function.__name__ == 'run':
-                yield '{}|{}({})'.format(
-                    length, function.__self__.final_function.__name__, ", ".join(function.__self__.build_tree())
-                )
-            else:
-                yield '{}|{}()'.format(length, function.__name__)
-
-    @staticmethod
-    def _list_add(output, match):
-        if type(match) is list:
-            output.extend(match)
-        else:
-            output.append(match)
-        return output
-
-    @staticmethod
-    def _scanner_to_matches(scanner, processor):
-        none_to_blank = lambda _: '' if _ is None else _
-
-        for match in scanner:
-            result = processor(map(none_to_blank, match.groups()))
-            if result is None:
-                continue
-            elif type(result) is list:
-                yield [result, match.start(), match.end()]
-            else:
-                yield [[result], match.start(), match.end()]
-
-
-def AlternatesGroup(expressions, final_function, name=""):
-    """ Group expressions using the OR character ``|``
-    >>> from collections import namedtuple
-    >>> expr = namedtuple('expr', 'regex group_lengths run')('(1)', [1], None)
-    >>> grouping = AlternatesGroup([expr, expr], lambda f: None, 'yeah')
-    >>> grouping.regex
-    '(?:(1))|(?:(1))'
-    >>> grouping.group_lengths
-    [1, 1]
-    """
-    inbetweens = ["|"] * (len(expressions) + 1)
-    inbetweens[0] = ""
-    inbetweens[-1] = ""
-    return Group(expressions, final_function, inbetweens, name)
-
-
-def Group(expressions, final_function, inbetweens, name=""):
-    """ Group expressions together with ``inbetweens`` and with the output of a ``final_functions``.
-    """
-    lengths = []
-    functions = []
-    regex = ""
-    i = 0
-    for expression in expressions:
-        regex += inbetweens[i]
-        regex += "(?:" + expression.regex + ")"
-        lengths.append(sum(expression.group_lengths))
-        functions.append(expression.run)
-        i += 1
-    regex += inbetweens[i]
-
-    return Expression(regex, functions, lengths, final_function, name)
