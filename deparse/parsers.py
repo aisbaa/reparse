@@ -74,6 +74,12 @@ class Parser(object):
         10
     """
 
+    class SkipResult(Exception):
+        """Post processing function can raise this exception to exclude current
+        result
+        """
+        pass
+
     def __init__(self, inp=None):
         for attr, val in self.parse_file(inp).items():
             if hasattr(self, attr):
@@ -93,12 +99,15 @@ class Parser(object):
         for name, d in cls._definitions.items():
             # one expression can yield multiple matches, or None
             for match in d.findall(line):
-                output = cls.merge_output(
-                    output,
-                    {
-                        name: cls.apply_function(d, match)
-                    }
-                )
+                try:
+                    output = cls.merge_output(
+                        output,
+                        {
+                            name: cls.apply_function(d, match)
+                        }
+                    )
+                except cls.SkipResult:
+                    pass
         return output
 
     @classmethod
@@ -109,6 +118,7 @@ class Parser(object):
             return func(match)
         else:
             return func(*match)
+
 
     @classmethod
     def parse_file(cls, f):

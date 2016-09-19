@@ -73,11 +73,18 @@ class TestParserClass(TestCase):
         assert final_output == part_output
 
 
-class TestNumberParserClass(TestCase):
+class TestCancelResultInFunc(TestCase):
 
-    class NumberParser(Parser):
-        numbers = D(r'\d+', int)
+    class CancelParser(Parser):
+        numbers = D(r'\d+', func='f_numbers_even')
+
+        @staticmethod
+        def f_numbers_even(number):
+            number = int(number)
+            if number % 2:
+                raise Parser.SkipResult
+            return number
 
     def test_if_parser_is_callable(self):
-        result = self.NumberParser.line('1 2 3')
-        assert result['numbers'] == [1, 2, 3]
+        result = self.CancelParser.line('1 2 3 4')
+        assert result['numbers'] == [2, 4]
