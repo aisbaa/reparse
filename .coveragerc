@@ -1,2 +1,5 @@
 [run]
-source = reparse
+source =
+    deparse/*
+omit =
+    deparse/_version.py
