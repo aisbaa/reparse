@@ -16,7 +16,7 @@ class InvalidPattern(Exception):
         self.regex_error = regex_error
 
     def __str__(self):
-        return '%{0.regex_error} in "{0.pattern}" pattern'.format(self)
+        return '{0.regex_error} in "{0.pattern}" pattern'.format(self)
 
 
 class Expression(object):
