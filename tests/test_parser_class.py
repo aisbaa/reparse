@@ -121,3 +121,20 @@ class DictResult(TestCase):
             'lunch break': 12,
             'work': 9
         }
+
+
+class SingleResultParser(TestCase):
+
+    class WordParser(Parser):
+        last_word = D(r'\w+', func=lambda x: x)
+
+    def test_if_single_value_is_correctly_mergged(self):
+        raw_data = u(
+            'I have a dream that one day every valley shall be'
+            'exalted and every hill and mountain shall be made low, the rough'
+            'places will be made plain, and the crooked places will be made'
+            'straight, and the glory of the Lord shall be revealed and all'
+            'flesh shall see it together.'
+        )
+        result = self.WordParser.parse_file(io.StringIO(raw_data))
+        assert result['last_word'] == 'together'

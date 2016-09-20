@@ -34,8 +34,8 @@ class D(Expression):
         return merge_func(container, value)
 
     def merge_results(self, output, part):
-        assert type(output) == type(part)
-
+        # TODO(Aistis): add test for merging single
+        assert type(output) == type(part) or self.container == self.single
         merge_func = {
             D.single: self.merge_single,
             list: self.merge_list_result,
@@ -152,7 +152,8 @@ class Parser(object):
     def apply_function(cls, d, match):
         """Calls function specified in D.func"""
         func = d.func if callable(d.func) else getattr(cls, d.func)
-        if isinstance(match, str):
+
+        if isinstance(match, six.string_types):
             return func(match)
         else:
             return func(*match)
