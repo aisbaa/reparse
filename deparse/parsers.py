@@ -47,7 +47,7 @@ class D(Expression):
     # merge line result methods
 
     def merge_single(self, container, value):
-        return value
+        return container if value is None else value
 
     def merge_list(self, container, value):
         container.append(value)
