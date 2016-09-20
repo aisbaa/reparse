@@ -5,7 +5,7 @@ class InvalidPattern(Exception):
     """Helps to debug lazy regex
 
     Since Expression is evaluated on first use and parser contains multiple
-    epxressions at the same time. It might be hard to know which regex is
+    expressions at the same time. It might be hard to know which regex is
     faulty.
 
     """
@@ -22,7 +22,7 @@ class InvalidPattern(Exception):
 class Expression(object):
     """Slightly enhanced regex expression
 
-    Adds lazy evaluation. Raises InvalidPattern expcetion instead of re.error
+    Adds lazy evaluation. Raises InvalidPattern exception instead of re.error
     which includes patter in error message.
 
     """
