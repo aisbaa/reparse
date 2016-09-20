@@ -12,11 +12,56 @@ class D(Expression):
         regex(str): regular expression passed to expression object
         func(callable): optional parameter used by parser to do post matching
             processing.
+        container(optional): factory function to create empty container for
+            values
     """
 
-    def __init__(self, regex, func=None):
+    @staticmethod
+    def single():
+        return None
+
+    def __init__(self, regex, func=None, container=None):
         super(D, self).__init__(regex)
         self.func = func
+        self.container = container or D.single
+
+    def merge(self, container, value):
+        merge_func = {
+            D.single: self.merge_single,
+            list: self.merge_list,
+            dict: self.merge_dict,
+        }[self.container]
+        return merge_func(container, value)
+
+    def merge_results(self, output, part):
+        assert type(output) == type(part)
+
+        merge_func = {
+            D.single: self.merge_single,
+            list: self.merge_list_result,
+            dict: self.merge_dict,
+        }[self.container]
+
+        return merge_func(output, part)
+
+    # merge line result methods
+
+    def merge_single(self, container, value):
+        return value
+
+    def merge_list(self, container, value):
+        container.append(value)
+        return container
+
+    def merge_dict(self, container, value):
+        container.update(value)
+        return container
+
+    # merge file results methods
+
+    def merge_list_result(self, container, part):
+        container += part
+        return container
 
 
 class ParserMeta(type):
@@ -55,10 +100,10 @@ class Parser(object):
 
         >>> from datetime import datetime
         >>> class AWSParser(Parser):
-        ...     price = D(r'\$(\d+)', func=int)
-        ...     service = D(r'(aws-[\w-]+)', func='f_echo')
+        ...     price = D(r'\$(\d+)', func=int, container=D.single)
+        ...     service = D(r'(aws-[\w-]+)', func='f_echo', container=D.single)
         ...     date = D(
-        ...         r'(\d{4}-\d{2}-\d{2})',
+        ...         r'(\d{4}-\d{2}-\d{2})', container=D.single,
         ...         func=lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         ...
         ...     @staticmethod
@@ -80,11 +125,6 @@ class Parser(object):
         """
         pass
 
-    def __init__(self, inp=None):
-        for attr, val in self.parse_file(inp).items():
-            if hasattr(self, attr):
-                setattr(self, attr, val)
-
     @classmethod
     def line(cls, line):
         """Returns a dictionary of results processed by all expressions.
@@ -97,15 +137,13 @@ class Parser(object):
         """
         output = {}
         for name, d in cls._definitions.items():
+            output[name] = d.container()
+
             # one expression can yield multiple matches, or None
             for match in d.findall(line):
                 try:
-                    output = cls.merge_output(
-                        output,
-                        {
-                            name: cls.apply_function(d, match)
-                        }
-                    )
+                    value = cls.apply_function(d, match)
+                    output[name] = d.merge(output[name], value)
                 except cls.SkipResult:
                     pass
         return output
@@ -119,7 +157,6 @@ class Parser(object):
         else:
             return func(*match)
 
-
     @classmethod
     def parse_file(cls, f):
         """Calls self.line for each line in file. Composes dict of data
@@ -132,29 +169,32 @@ class Parser(object):
             cls.merge_output(final_output, output)
         return final_output
 
-    @staticmethod
-    def merge_output(result, part):
+    @classmethod
+    def merge_output(cls, result, part):
         """Merges two dictionaries in a way that no data is lost.
 
-        >>> Parser.merge_output({'a': 3}, {'a': 4})
-        {'a': [3, 4]}
-        >>> Parser.merge_output({}, None)
-        {}
-        >>> Parser.merge_output({}, [])
-        {}
+        Example:
+
+            >>> class AParser(Parser):
+            ...     a = D(r'a', container=list, func=str)
+            ...
+            >>> AParser.merge_output({'a': [3]}, {'a': [4]})
+            {'a': [3, 4]}
+            >>> AParser.merge_output({}, None)
+            {}
+            >>> AParser.merge_output({}, [])
+            {}
         """
         if not part:
             return result
 
-        for k, v in part.items():
-            if k not in result:
+        for name, value in part.items():
+            if name not in result:
                 # no key in result dict
-                result[k] = v
+                result[name] = value
                 continue
-            # key is in result dictionary
-            result_value = result[k]
-            if isinstance(result_value, list):
-                result_value.append(v)
-            else:
-                result[k] = [result_value, v]
+
+            d = cls._definitions[name]
+            result[name] = d.merge_results(result[name], value)
+
         return result

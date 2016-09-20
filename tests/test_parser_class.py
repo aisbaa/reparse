@@ -10,7 +10,7 @@ from deparse import D, Parser
 class TestAWSParser(TestCase):
 
     class AWSParser(Parser):
-        price = D(r'\$(\d+)', func=int)
+        price = D(r'\$(\d+)', func=int,)
         service = D(r'(aws-[\w-]+)', func='f_echo')
         date = D(
             r'(\d{4}-\d{2}-\d{2})',
@@ -36,7 +36,7 @@ class TestParserClass(TestCase):
 
     class TimeParser(Parser):
         hours = D(
-            r'([12]?\d)(am|pm)',
+            r'([12]?\d)(am|pm)', container=list
         )
 
         @staticmethod
@@ -48,9 +48,9 @@ class TestParserClass(TestCase):
             return hour
 
     def test_parse_one_line(self):
-        assert self.TimeParser.line('1pm') == {'hours': 13}
-        assert self.TimeParser.line('10am') == {'hours': 10}
-        assert self.TimeParser.line('8pm') == {'hours': 20}
+        assert self.TimeParser.line('1pm') == {'hours': [13]}
+        assert self.TimeParser.line('10am') == {'hours': [10]}
+        assert self.TimeParser.line('8pm') == {'hours': [20]}
 
     def test_multiple_values_should_be_concatinated_a_list(self):
         assert self.TimeParser.line('1pm-4am') == {'hours': [13, 4]}
@@ -76,7 +76,7 @@ class TestParserClass(TestCase):
 class TestCancelResultInFunc(TestCase):
 
     class CancelParser(Parser):
-        numbers = D(r'\d+', func='f_numbers_even')
+        numbers = D(r'\d+', func='f_numbers_even', container=list)
 
         @staticmethod
         def f_numbers_even(number):
@@ -85,6 +85,39 @@ class TestCancelResultInFunc(TestCase):
                 raise Parser.SkipResult
             return number
 
-    def test_if_parser_is_callable(self):
+    def test_if_parser_its_possible_to_filter_results_in_func(self):
         result = self.CancelParser.line('1 2 3 4')
         assert result['numbers'] == [2, 4]
+
+
+class DictResult(TestCase):
+
+    class TimeTableParser(Parser):
+        activities = D(
+            r'([12]?\d)(am|pm) - (.+)',
+            container=dict
+        )
+
+        @staticmethod
+        def f_activities(hour, am_pm, activity):
+            """Converts 12 hour time to 24 hour time."""
+            hour = int(hour)
+            if am_pm == 'pm':
+                hour += 12
+
+            return {activity: hour}
+
+    def test_must_support_file_parsing(self):
+        raw_data = u(
+            '8am - brekfast\n'
+            '9am - work\n'
+            '12am - lunch break\n'
+            '5pm - end of work\n'
+        )
+        result = self.TimeTableParser.parse_file(io.StringIO(raw_data))
+        assert result['activities'] == {
+            'brekfast': 8,
+            'end of work': 17,
+            'lunch break': 12,
+            'work': 9
+        }
